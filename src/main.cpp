@@ -9,17 +9,17 @@
 #include <ArduinoJson.h>
 #include <PubSubClient.h>
 
-String dId = "121212";
-String webhook_pass = "SA7sxAKDVR";
-String webhook_endpoint = "http://192.168.0.6:3001/api/getdevicecredentials";
-const char *mqtt_server = "192.168.0.6";
+String dId = "12345678";
+String webhook_pass = "vlEyVbgmj9";
+String webhook_endpoint = "http://18.230.177.45:3001/api/getdevicecredentials";
+const char *mqtt_server = "18.230.177.45";
 
 //PINS
 #define led 2
 
 //WiFi
-const char *wifi_ssid = "GOLD2";
-const char *wifi_password = "Tesla208";
+const char *wifi_ssid = "TP-Link_1A46";
+const char *wifi_password = "15795496";
 
 //Functions definitions
 bool get_mqtt_credentials();
@@ -30,7 +30,7 @@ void process_actuators();
 void send_data_to_broker();
 void callback(char *topic, byte *payload, unsigned int length);
 void process_incoming_msg(String topic, String incoming);
-void print_stats();
+//void print_stats();
 void clear();
 
 //Global Vars
@@ -101,51 +101,26 @@ void process_sensors()
 {
 
   //get temp simulation
+  //if (mqtt_data_doc["variables"][2]["last"]["value"] == "true")
+  
+  //mqtt_data_doc["variables"][0]["last"]["value"] = temp;
   int temp = random(1, 100);
-  mqtt_data_doc["variables"][0]["last"]["value"] = temp;
-
-  //save temp?
-  int dif = temp - prev_temp;
-  if (dif < 0)
-  {
-    dif *= -1;
-  }
-
-  if (dif >= 40)
-  {
-    mqtt_data_doc["variables"][0]["last"]["save"] = 1;
-  }
-  else
-  {
-    mqtt_data_doc["variables"][0]["last"]["save"] = 0;
-  }
-
-  prev_temp = temp;
-
-  //get humidity simulation
   int hum = random(1, 50);
-  mqtt_data_doc["variables"][1]["last"]["value"] = hum;
-
-  //save hum?
-  dif = hum - prev_hum;
-  if (dif < 0)
-  {
-    dif *= -1;
+  for (int i = 0; i < mqtt_data_doc["variables"].size(); i++ ){
+    
+    if(mqtt_data_doc["variables"][i]["variableFullName"]=="Corriente"){
+       mqtt_data_doc["variables"][i]["last"]["value"] = temp;
+       mqtt_data_doc["variables"][i]["last"]["save"] = 1;
+    }
+    if(mqtt_data_doc["variables"][i]["variableFullName"]=="Voltaje"){
+       mqtt_data_doc["variables"][i]["last"]["value"] = hum;
+       mqtt_data_doc["variables"][i]["last"]["save"] = 1;
+    }
+  
   }
-
-  if (dif >= 20)
-  {
-    mqtt_data_doc["variables"][1]["last"]["save"] = 1;
-  }
-  else
-  {
-    mqtt_data_doc["variables"][1]["last"]["save"] = 0;
-  }
-
-  prev_hum = hum;
 
   //get led status
-  mqtt_data_doc["variables"][4]["last"]["value"] = (HIGH == digitalRead(led));
+  //mqtt_data_doc["variables"][4]["last"]["value"] = (HIGH == digitalRead(led));
 }
 
 void process_actuators()
@@ -192,7 +167,7 @@ void process_incoming_msg(String topic, String incoming){
 
   }
 
-  process_actuators();
+  //process_actuators();
 
 }
 
@@ -236,16 +211,20 @@ void send_data_to_broker()
       String topic = str_root_topic + str_variable + "/sdata";
 
       String toSend = "";
-
+      //serializeJson(mqtt_data_doc["variables"], toSend);
+      //Serial.println(toSend);
       serializeJson(mqtt_data_doc["variables"][i]["last"], toSend);
 
       client.publish(topic.c_str(), toSend.c_str());
 
-
-      //STATS
+      Serial.println(topic);
+      Serial.print(toSend);
+      Serial.print(", freq :");
+      Serial.println(freq);
+      /*//STATS
       long counter = mqtt_data_doc["variables"][i]["counter"];
       counter++;
-      mqtt_data_doc["variables"][i]["counter"] = counter;
+      mqtt_data_doc["variables"][i]["counter"] = counter;*/
 
     }
   }
@@ -315,7 +294,7 @@ void check_mqtt_connection()
     client.loop();
     process_sensors();
     send_data_to_broker();
-    print_stats();
+    //print_stats();
   }
 }
 
@@ -368,7 +347,7 @@ void clear()
   Serial.write(27);
   Serial.print("[H"); // cursor to home command
 }
-
+/*
 long lastStats = 0;
 
 void print_stats()
@@ -406,3 +385,4 @@ void print_stats()
     Serial.print(boldGreen + "\n\n Last Incomming Msg -> " + fontReset + last_received_msg);
   }
 }
+*/
